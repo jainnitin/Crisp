@@ -75,7 +75,7 @@ struct BlockHost<Content: View>: View {
     var body: some View {
         // Report natural height; the canvas springs the clip to it.
         content
-            .frame(width: 308)
+            .frame(width: 340)  // keep in step with PanelCanvas.width
             .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { onHeight($0) }
             // Top-glue: pin to .top so NSHostingView doesn't center a nested
             // curtain's shorter mid-reveal content (that drifts the top row).
@@ -132,24 +132,26 @@ struct DisplayHeaderBlock: View {
                     }
                 }
             )
+            // Personal layout: a little more air between the slider rows than upstream.
             BrightnessSliderView(display: display, compact: true)
-                .padding(.bottom, 4)
+                .padding(.vertical, 3)
 
             // The monitor's own contrast, inline once the monitor answered 0x12.
             if display.contrastSupported {
                 ContrastSliderView(display: display, leadingInset: 0)
-                    .padding(.bottom, 4)
+                    .padding(.vertical, 3)
             }
 
             // Speaker volume: shown only when DDC volume answered (#23) and
             // the setting is on; height changes flow through BlockHost.
             if settings.showVolumeSliders && display.volumeSupported {
                 VolumeSliderView(display: display)
-                    .padding(.bottom, 4)
+                    .padding(.vertical, 3)
             }
 
             // One-tap KVM: switch the monitor (and its USB hub) to another input.
             QuickInputRow(display: display)
+                .padding(.top, 6)
         }
         .padding(.top, isFirst ? 0 : 8)
     }

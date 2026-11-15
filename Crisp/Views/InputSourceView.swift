@@ -255,7 +255,7 @@ struct QuickInputRow: View {
             }
             .frame(maxWidth: .infinity)
             .padding(.horizontal, 8)
-            .padding(.vertical, 4)
+            .padding(.vertical, 6)
             .background(Capsule().fill(fill))
             .foregroundColor(isCurrent ? .white : .primary)
             .contentShape(Capsule())

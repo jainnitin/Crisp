@@ -524,7 +524,11 @@ struct ResolutionSliderBlock: View {
         let modes = controller.sliderModes
         if modes.count >= 2 {
             VStack(alignment: .leading, spacing: 0) {
-                if style != .cardList { modeSlider(modes) }
+                if style == .quick {
+                    quickSlider(modes)
+                } else if style != .cardList {
+                    modeSlider(modes)
+                }
                 if style != .quick {
                     DisclosureSubRow(
                         label: "Show all resolutions",
@@ -579,6 +583,55 @@ struct ResolutionSliderBlock: View {
             .onChange(of: display.currentDisplayMode?.id) { _, _ in
                 if !controller.smoothBusy { controller.sliderIndex = controller.currentSmoothIndex(modes) }
             }
+        }
+    }
+
+    /// The main panel's resolution row, shaped like the brightness / contrast / volume
+    /// rows above it: a glyph at each end (24pt, so the track lines up with theirs),
+    /// the same control size, ticks under the track, and the looks-like label under that.
+    @ViewBuilder
+    private func quickSlider(_ modes: [DisplayMode]) -> some View {
+        let defaultIdx = controller.defaultSliderIndex(modes)
+        VStack(spacing: 2) {
+            HStack(spacing: 8) {
+                Image(systemName: "textformat.size.larger")
+                    .font(.system(size: 14))
+                    .frame(width: 24)
+                    .accessibilityHidden(true)
+                VStack(spacing: 1) {
+                    Slider(
+                        value: $controller.sliderIndex,
+                        in: 0...Double(modes.count - 1),
+                        onEditingChanged: { editing in
+                            if !editing { controller.applySmooth(modes) }
+                        }
+                    )
+                    .controlSize(SystemLook.isMacOS27OrLater ? .regular : .small)
+                    .tint(Color.accentColor)
+                    .accessibilityLabel("Resolution")
+                    .accessibilityValue(controller.looksLikeLabel(modes))
+                    .onChange(of: controller.sliderIndex) { _, v in
+                        let snapped = v.rounded()
+                        if snapped != controller.sliderIndex { controller.sliderIndex = snapped }
+                    }
+                    stepMarks(count: modes.count, defaultIdx: defaultIdx)
+                }
+                Image(systemName: "textformat.size.smaller")
+                    .font(.system(size: 14))
+                    .frame(width: 24)
+                    .accessibilityHidden(true)
+            }
+            Text(controller.looksLikeLabel(modes))
+                .font(.caption)
+                .foregroundColor(.secondary)
+                .monospacedDigit()
+        }
+        .padding(.horizontal, 12)
+        .padding(.top, 6)
+        .padding(.bottom, 8)
+        .onAppear { controller.sliderIndex = controller.currentSmoothIndex(modes) }
+        .onChange(of: display.currentDisplayMode?.id) { _, _ in
+            if !controller.smoothBusy { controller.sliderIndex = controller.currentSmoothIndex(modes) }
         }
     }
 

@@ -204,7 +204,7 @@ final class PanelCanvas {
     /// For the spring's tick log sub-timings (single instance in practice).
     static weak var shared: PanelCanvas?
 
-    let width: CGFloat = 308
+    let width: CGFloat = 340  // personal: 308 upstream; longer tracks and input pills
     /// Transparent window margins hosting the layer shadow.
     let sideMargin: CGFloat = 40
     let bottomMargin: CGFloat = 48
