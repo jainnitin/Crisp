@@ -658,16 +658,25 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
                 PresetListView()
             }
         })
-        let toolshead = block("toolshead") {
+        // Settings first, Tools folded inside it: one less top-level row.
+        let settingshead = block("settingshead") {
             VStack(alignment: .leading, spacing: 0) {
                 SectionDivider()
-                ExpandableRowStateful(icon: "wrench.and.screwdriver.fill", iconActive: false,
-                                      label: "Tools", state: state, key: \.showTools)
+                ExpandableRowStateful(icon: "gearshape.fill", iconActive: false,
+                                      label: "Settings", state: state, key: \.showSettings)
             }
+        }
+        settingshead.liveInFlight = true
+        blocks.append(settingshead)
+        let toolshead = block("toolshead", isOpen: { state.showSettings }) {
+            ExpandableRowStateful(icon: "wrench.and.screwdriver.fill", iconActive: false,
+                                  label: "Tools", state: state, key: \.showTools)
+                .padding(.leading, 8)
         }
         toolshead.liveInFlight = true
         blocks.append(toolshead)
-        let toolsA = block("toolsA", isOpen: { state.showTools }) {
+        let toolsOpen = { state.showSettings && state.showTools }
+        let toolsA = block("toolsA", isOpen: toolsOpen) {
             VStack(alignment: .leading, spacing: 0) {
                 if !KeepAwakeService.isDisabledByPolicy {
                     KeepAwakeRow()
@@ -677,35 +686,29 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
                 ExpandableRowStateful(icon: "display.2", iconActive: false,
                                       label: "Virtual Displays", state: state, key: \.showVirtualDisplays)
             }
-            .padding(.leading, 8)
+            .padding(.leading, 16)
         }
         toolsA.liveInFlight = true   // Virtual Displays chevron
         blocks.append(toolsA)
-        blocks.append(block("vdrows", isOpen: { state.showTools && state.showVirtualDisplays }) {
+        blocks.append(block("vdrows", isOpen: { toolsOpen() && state.showVirtualDisplays }) {
             VirtualDisplayView()
-                .padding(.leading, 16)
+                .padding(.leading, 24)
         })
         let toolsB = block("toolsB", isOpen: { [weak dm] in
-            state.showTools && (dm?.displays.count ?? 0) > 1
+            toolsOpen() && (dm?.displays.count ?? 0) > 1
         }) {
             ExpandableRowStateful(icon: "rectangle.3.offgrid", iconActive: false,
                                   label: "Arrange Displays", state: state, key: \.showArrangement)
-                .padding(.leading, 8)
+                .padding(.leading, 16)
         }
         toolsB.liveInFlight = true
         blocks.append(toolsB)
         blocks.append(block("arrangerows", isOpen: { [weak dm] in
-            state.showTools && state.showArrangement && (dm?.displays.count ?? 0) > 1
+            toolsOpen() && state.showArrangement && (dm?.displays.count ?? 0) > 1
         }) {
             ArrangementView()
-                .padding(.leading, 8)
+                .padding(.leading, 16)
         })
-        let settingshead = block("settingshead") {
-            ExpandableRowStateful(icon: "gearshape.fill", iconActive: false,
-                                  label: "Settings", state: state, key: \.showSettings)
-        }
-        settingshead.liveInFlight = true
-        blocks.append(settingshead)
         blocks.append(block("settingsrows", isOpen: { state.showSettings }) {
             SettingsView()
                 .padding(.leading, 8)
