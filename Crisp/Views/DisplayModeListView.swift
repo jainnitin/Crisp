@@ -191,8 +191,11 @@ final class DisplayModeController: ObservableObject {
         guard group.id != currentGroup?.id, pendingResolutionID == nil else { return }
         // Keep the current refresh rate when the new resolution offers it. Tolerant match:
         // CG reports fractional rates (59.94) where the CGS-surfaced modes carry whole Hz.
+        // Prefer the same fixed/Variable kind: a VRR panel lists both at each rate, Variable
+        // first, so a plain first-match silently flipped a fixed 120Hz to Variable.
         let target = currentMode.flatMap { cur in
-            group.modes.first { ResolutionService.refreshMatches($0.refreshRate, cur.refreshRate) }
+            let rate = group.modes.filter { ResolutionService.refreshMatches($0.refreshRate, cur.refreshRate) }
+            return rate.first { $0.isVariableRefresh == cur.isVariableRefresh } ?? rate.first
         } ?? group.bestMode
         pendingResolutionID = group.id
         switchTo(target) { self.pendingResolutionID = nil }
@@ -405,11 +408,13 @@ final class DisplayModeController: ObservableObject {
            cur.width == target.width, cur.height == target.height { return }
         // Keep the current refresh rate and scaling kind when offered (tolerant Hz match,
         // see selectResolution above).
+        // Same fixed/Variable kind first (see selectResolution).
         let mode = currentMode.flatMap { cur in
-            display.availableModes.first {
+            let rate = display.availableModes.filter {
                 $0.isHiDPI == target.isHiDPI && $0.width == target.width && $0.height == target.height &&
                 ResolutionService.refreshMatches($0.refreshRate, cur.refreshRate)
             }
+            return rate.first { $0.isVariableRefresh == cur.isVariableRefresh } ?? rate.first
         } ?? target
         guard mode.id != currentMode?.id else { return }
         switchTo(mode) { }
