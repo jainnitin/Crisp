@@ -94,7 +94,7 @@ for key in SUFeedURL SUPublicEDKey SUEnableAutomaticChecks SUVerifyUpdateBeforeE
 done
 /usr/libexec/PlistBuddy -c "Add :SUFeedURL string https://crispmac.app/appcast.xml" "$PLIST"
 /usr/libexec/PlistBuddy -c "Add :SUPublicEDKey string 3UT7wZoXDzrAhwCMVS3DoPt2lcya9H/cvlyXliuPuhM=" "$PLIST"
-/usr/libexec/PlistBuddy -c "Add :SUEnableAutomaticChecks bool true" "$PLIST"
+/usr/libexec/PlistBuddy -c "Add :SUEnableAutomaticChecks bool false" "$PLIST"
 /usr/libexec/PlistBuddy -c "Add :SUVerifyUpdateBeforeExtraction bool true" "$PLIST"
 /usr/libexec/PlistBuddy -c "Add :SURequireSignedFeed bool true" "$PLIST"
 xattr -cr "$APP"

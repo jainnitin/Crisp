@@ -132,7 +132,7 @@ cat > "$APP/Contents/Info.plist" <<PLIST
 	<key>NSAppleEventsUsageDescription</key><string>Crisp uses System Events to switch Dark Mode with the system's animated transition.</string>
 	<key>SUFeedURL</key><string>https://crispmac.app/appcast.xml</string>
 	<key>SUPublicEDKey</key><string>3UT7wZoXDzrAhwCMVS3DoPt2lcya9H/cvlyXliuPuhM=</string>
-	<key>SUEnableAutomaticChecks</key><true/>
+	<key>SUEnableAutomaticChecks</key><false/>  <!-- personal build: no updates from the official feed -->
 	<key>SUVerifyUpdateBeforeExtraction</key><true/>
 	<key>SURequireSignedFeed</key><true/>
 	<key>CFBundleSupportedPlatforms</key><array><string>MacOSX</string></array>
