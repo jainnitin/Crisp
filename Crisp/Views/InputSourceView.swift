@@ -1,4 +1,5 @@
 import SwiftUI
+import AppKit
 
 // The Input row on a display card (#196): which input the monitor shows, and a
 // checkmark list to switch it. Switching away disconnects the display, so the way
@@ -153,5 +154,98 @@ private extension View {
             .padding(.leading, 24)
             .padding(.trailing, 12)
             .padding(.vertical, 3)
+    }
+}
+
+/// One-tap input buttons under a display's sliders: the KVM switch without opening
+/// the card. Shows the inputs the monitor lists (read once, then kept), plus the one
+/// this Mac is on. Tapping another input switches the monitor and its USB hub to it.
+struct QuickInputRow: View {
+    @ObservedObject var display: DisplayInfo
+    @EnvironmentObject var displayManager: DisplayManager
+    @ObservedObject private var service = InputSwitchService.shared
+    @State private var pending: UInt16?
+    @State private var failed = false
+
+    private var uuid: String { display.displayUUID }
+
+    /// The monitor's own list once read; until then only this Mac's input, so the
+    /// generic list (which can miss a monitor's own codes) never shows.
+    private var options: [UInt16] {
+        var values = service.listed[uuid] ?? []
+        if let mine = service.macInput[uuid], !values.contains(mine) { values.insert(mine, at: 0) }
+        return values
+    }
+
+    var body: some View {
+        if service.isAvailable(for: display) {
+            HStack(spacing: 6) {
+                Image(systemName: "cable.connector")
+                    .font(.system(size: 13))
+                    .foregroundColor(.secondary)
+                    .frame(width: 20)
+                    .accessibilityHidden(true)
+                if service.reading.contains(uuid) && options.count < 2 {
+                    ProgressView().scaleEffect(0.5).frame(width: 14, height: 14)
+                    Text("Reading the inputs from the monitor…")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                ForEach(options, id: \.self) { value in
+                    inputButton(value)
+                }
+                Spacer(minLength: 0)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 4)
+            .task { await service.settle(display) }
+        }
+    }
+
+    private func inputButton(_ value: UInt16) -> some View {
+        let isCurrent = service.macInput[uuid] == value
+        return Button {
+            choose(value)
+        } label: {
+            HStack(spacing: 4) {
+                if pending == value {
+                    ProgressView().scaleEffect(0.4).frame(width: 10, height: 10)
+                }
+                Text(verbatim: inputLabel(value))
+                    .font(.callout)
+                    .fontWeight(isCurrent ? .semibold : .regular)
+                    .lineLimit(1)
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 4)
+            .background(
+                Capsule().fill(isCurrent ? Color.accentColor.opacity(0.85)
+                                         : (failed && pending == nil ? Color.red.opacity(0.25) : Color.primary.opacity(0.08)))
+            )
+            .foregroundColor(isCurrent ? .white : .primary)
+        }
+        .buttonStyle(.plain)
+        .disabled(isCurrent || pending != nil)
+        .accessibilityLabel(inputLabel(value))
+        .accessibilityAddTraits(isCurrent ? .isSelected : [])
+    }
+
+    private func choose(_ value: UInt16) {
+        guard pending == nil else { return }
+        guard service.macInput[uuid] != nil else {
+            service.mark(value, for: display)
+            return
+        }
+        pending = value
+        failed = false
+        Task { @MainActor in
+            let result = await service.switchInput(display, to: value)
+            pending = nil
+            displayManager.refreshDisplays()
+            if case .failure = result {
+                failed = true
+                NSSound.beep()
+            }
+        }
     }
 }

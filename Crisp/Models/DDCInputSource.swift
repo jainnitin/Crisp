@@ -14,7 +14,7 @@ enum DDCInputSource {
     private static let names: [UInt16: String] = [
         0x01: "VGA 1", 0x02: "VGA 2", 0x03: "DVI 1", 0x04: "DVI 2",
         0x0F: "DisplayPort 1", 0x10: "DisplayPort 2",
-        0x11: "HDMI 1", 0x12: "HDMI 2", 0x1B: "USB-C"
+        0x11: "HDMI 1", 0x12: "HDMI 2", 0x19: "Thunderbolt", 0x1B: "USB-C"
     ]
 
     /// The connector name for a value, or nil for one without a common name. The

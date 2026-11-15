@@ -135,12 +135,21 @@ struct DisplayHeaderBlock: View {
             BrightnessSliderView(display: display, compact: true)
                 .padding(.bottom, 4)
 
+            // The monitor's own contrast, inline once the monitor answered 0x12.
+            if display.contrastSupported {
+                ContrastSliderView(display: display, leadingInset: 0)
+                    .padding(.bottom, 4)
+            }
+
             // Speaker volume: shown only when DDC volume answered (#23) and
             // the setting is on; height changes flow through BlockHost.
             if settings.showVolumeSliders && display.volumeSupported {
                 VolumeSliderView(display: display)
                     .padding(.bottom, 4)
             }
+
+            // One-tap KVM: switch the monitor (and its USB hub) to another input.
+            QuickInputRow(display: display)
         }
         .padding(.top, isFirst ? 0 : 8)
     }

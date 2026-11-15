@@ -32,6 +32,8 @@ struct MonitorContrastBlock: View {
 
 struct ContrastSliderView: View {
     @ObservedObject var display: DisplayInfo
+    /// Extra leading inset: 26 under the card's labeled row, 0 under the header sliders.
+    var leadingInset: CGFloat = 26
     @State private var localContrast: Double = 0
     @State private var isDragging: Bool = false
 
@@ -60,7 +62,7 @@ struct ContrastSliderView: View {
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 4)
-        .padding(.leading, 26)
+        .padding(.leading, leadingInset)
         .task(id: display.displayID) { localContrast = display.contrast }
         .onChange(of: display.contrast) { _, newValue in
             // External change (a probe adopting the OSD level, a step button).

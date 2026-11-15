@@ -632,9 +632,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             }) {
                 ProfileBodyBlock(controller: profC)
             })
-            blocks.append(detail("dcontrast", isOpen: detailOpen, live: true) {
-                MonitorContrastBlock(display: display)
-            })
             blocks.append(detail("dimg-head", isOpen: detailOpen, live: true) {
                 ImageHeadBlock(display: display, state: state)
             })
@@ -667,12 +664,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
                 CombinedBrightnessView(displays: vis)
             }
         })
-        if CoreBrightnessService.shared.darkModeAvailable
-            || CoreBrightnessService.shared.nightShiftAvailable
-            || CoreBrightnessService.shared.trueToneAvailable {
-            blocks.append(block("effects") { ScreenEffectsView() })
-        }
-        blocks.append(block("presets") {
+        // Dark Mode / Night Shift / True Tone tiles left out of this panel: they live in
+        // Control Center already. Presets show once there is one to apply.
+        blocks.append(block("presets", isOpen: { !PresetService.shared.presets.isEmpty }) {
             VStack(alignment: .leading, spacing: 0) {
                 SectionDivider()
                 SectionHeader(title: "Presets")
