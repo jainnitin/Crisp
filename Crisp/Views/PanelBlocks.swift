@@ -115,8 +115,12 @@ struct DisplayHeaderBlock: View {
     @ObservedObject var display: DisplayInfo
     let isFirst: Bool
     @ObservedObject var state: PanelSectionState
-    @ObservedObject private var settings = SettingsService.shared
+    /// Drives the resolution stops at the top of the card.
+    let modeController: DisplayModeController
 
+    // Personal layout, in groups split by thin dividers: how large things look
+    // (resolution stops), then light (brightness), then which
+    // computer the monitor shows (inputs). Contrast lives in the expanded card.
     var body: some View {
         VStack(spacing: 0) {
             DisplayRowView(
@@ -132,26 +136,23 @@ struct DisplayHeaderBlock: View {
                     }
                 }
             )
-            // Personal layout: a little more air between the slider rows than upstream.
+
+            ResolutionSliderBlock(controller: modeController, state: state, style: .quick)
+
+            SectionDivider()
+
             BrightnessSliderView(display: display, compact: true)
                 .padding(.vertical, 3)
 
-            // The monitor's own contrast, inline once the monitor answered 0x12.
-            if display.contrastSupported {
-                ContrastSliderView(display: display, leadingInset: 0)
-                    .padding(.vertical, 3)
-            }
+            // No volume slider in this layout; the volume keys still reach the
+            // monitor's speakers.
 
-            // Speaker volume: shown only when DDC volume answered (#23) and
-            // the setting is on; height changes flow through BlockHost.
-            if settings.showVolumeSliders && display.volumeSupported {
-                VolumeSliderView(display: display)
-                    .padding(.vertical, 3)
+            if InputSwitchService.shared.isAvailable(for: display) {
+                SectionDivider()
+                // One-tap KVM: switch the monitor (and its USB hub) to another input.
+                QuickInputRow(display: display)
+                    .padding(.vertical, 2)
             }
-
-            // One-tap KVM: switch the monitor (and its USB hub) to another input.
-            QuickInputRow(display: display)
-                .padding(.top, 6)
         }
         .padding(.top, isFirst ? 0 : 8)
     }

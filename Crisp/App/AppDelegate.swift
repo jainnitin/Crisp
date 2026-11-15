@@ -576,19 +576,15 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         for (index, display) in vis.enumerated() {
             let id = display.displayID
             let uuid = display.displayUUID
+            let modeC = DisplayModeController(display: display, displayManager: dm)
             let dhead = block("dhead-\(uuid)") {
-                DisplayHeaderBlock(display: display, isFirst: index == 0, state: state)
+                DisplayHeaderBlock(display: display, isFirst: index == 0, state: state, modeController: modeC)
             }
             dhead.liveInFlight = true   // display row chevron
             blocks.append(dhead)
             // Split so every dropdown is its own block: the canvas clips content
             // rendered once at natural height (the 120Hz fix; docs/panel-resize.md).
             // Each detail block paints its shaded band on the clip layer (banded).
-            let modeC = DisplayModeController(display: display, displayManager: dm)
-            // Resolution stops on the main panel, under the display's sliders.
-            blocks.append(block("dres-quick-\(uuid)") {
-                ResolutionSliderBlock(controller: modeC, state: state, style: .quick)
-            })
             let profC = DisplayProfileController(display: display)
             let detailOpen = { state.expandedDisplayIDs.contains(id) }
             func detail<V: View>(_ sub: String, isOpen: @escaping () -> Bool,
@@ -634,6 +630,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
                 detailOpen() && state.profileOpenIDs.contains(id)
             }) {
                 ProfileBodyBlock(controller: profC)
+            })
+            // The monitor's own contrast lives here, out of the main panel's way.
+            blocks.append(detail("dcontrast", isOpen: detailOpen, live: true) {
+                MonitorContrastBlock(display: display)
             })
             // Personal trim: the card keeps Resolution, Refresh Rate and Color Profile.
             // Rotation, Image Adjustment, HDR / Extra Brightness and the Connection rows
