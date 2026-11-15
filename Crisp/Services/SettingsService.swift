@@ -229,6 +229,7 @@ final class SettingsService: ObservableObject, @unchecked Sendable {
             if volumeUpShortcut?.sameKeys(as: shortcut) == true { volumeUpShortcut = nil }
             if volumeDownShortcut?.sameKeys(as: shortcut) == true { volumeDownShortcut = nil }
             if muteShortcut?.sameKeys(as: shortcut) == true { muteShortcut = nil }
+            InputSwitchService.shared.removeShortcut(matching: shortcut)
         }
         assign(shortcut)
         if let shortcut {

@@ -174,6 +174,7 @@ class DisplayManager: ObservableObject {
             GammaService.shared.invalidate(for: $0)
             BrightnessBoostService.shared.invalidate(for: $0)
             VolumeService.shared.invalidate(for: $0)
+            ContrastService.shared.invalidate(for: $0)
         }
         // Checked against the online list, not removedIDs: the mirror virtual is never in
         // `displays`, so its death wouldn't show up there otherwise.
@@ -210,6 +211,7 @@ class DisplayManager: ObservableObject {
         for display in addedDisplays {
             Task { await BrightnessService.shared.refreshBrightness(for: display) }
             VolumeService.shared.refreshVolume(for: display)
+            ContrastService.shared.refreshContrast(for: display)
             // Monitors often answer DDC with garbage for the first seconds after link
             // training, and a failed connect-time read has no other retry; a delayed
             // re-read heals a stale slider seed (no-op if the first read was fine).
@@ -218,6 +220,7 @@ class DisplayManager: ObservableObject {
                     try? await Task.sleep(nanoseconds: 3_000_000_000)
                     await BrightnessService.shared.refreshBrightness(for: display)
                     VolumeService.shared.refreshVolume(for: display)
+                    ContrastService.shared.refreshContrast(for: display)
                 }
             }
             Task {

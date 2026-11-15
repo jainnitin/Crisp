@@ -21,6 +21,7 @@ final class HotkeyService {
         case brightness(up: Bool)
         case volume(up: Bool)
         case muteVolume
+        case input(uuid: String, value: UInt16)
     }
 
     /// An action that may repeat while its hotkey is held down.
@@ -86,6 +87,9 @@ final class HotkeyService {
         }
         if let shortcut = SettingsService.shared.muteShortcut {
             register(shortcut, for: .muteVolume)
+        }
+        for entry in InputSwitchService.shared.shortcuts {
+            register(entry.shortcut, for: .input(uuid: entry.uuid, value: entry.input))
         }
         Self.log.info("synced: \(self.registrations.count) hotkey(s) registered")
     }
@@ -156,6 +160,8 @@ final class HotkeyService {
             startRepeat { BrightnessKeyService.shared.adjustVolumeFromShortcut(up: up) }
         case .muteVolume:
             BrightnessKeyService.shared.toggleVolumeMuteFromShortcut()
+        case .input(let uuid, let value):
+            Task { await InputSwitchService.shared.switchFromShortcut(uuid: uuid, input: value) }
         case nil:
             break
         }

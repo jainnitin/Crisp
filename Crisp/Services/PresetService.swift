@@ -75,6 +75,7 @@ final class PresetService: ObservableObject, @unchecked Sendable {
             if SettingsService.shared.hidpiShortcut?.sameKeys(as: shortcut) == true {
                 SettingsService.shared.hidpiShortcut = nil
             }
+            InputSwitchService.shared.removeShortcut(matching: shortcut)
         }
         presets[index].shortcut = shortcut
         savePresets()

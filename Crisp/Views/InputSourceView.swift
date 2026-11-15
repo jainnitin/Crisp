@@ -39,6 +39,7 @@ struct InputBodyBlock: View {
     @ObservedObject private var service = InputSwitchService.shared
     @State private var pending: UInt16?
     @State private var message: String?
+    @State private var showShortcuts = false
 
     private var uuid: String { display.displayUUID }
     private var isOpen: Bool { state.inputOpenIDs.contains(display.displayID) }
@@ -83,9 +84,40 @@ struct InputBodyBlock: View {
             if let message {
                 Text(message).caption().foregroundColor(.red)
             }
+
+            shortcuts
         }
         .onChange(of: isOpen) { _, open in
             if open { Task { await service.readListIfNeeded(display) } }
+        }
+    }
+
+    /// One recorder per input: a KVM key per computer. Folded away by default so the
+    /// list stays a list. Run Crisp on each computer and give each its own key for the
+    /// other input; on this Mac, the key for its own input also reconnects the monitor.
+    @ViewBuilder private var shortcuts: some View {
+        let any = service.shortcuts.contains { $0.uuid == uuid }
+        let title: LocalizedStringKey = showShortcuts ? "Hide Keyboard Shortcuts"
+            : (any ? "Edit Keyboard Shortcuts" : "Add Keyboard Shortcuts")
+        Button(title) {
+            showShortcuts.toggle()
+        }
+        .buttonStyle(.link)
+        .font(.caption)
+        .padding(.leading, 24)
+        .padding(.vertical, 3)
+        if showShortcuts {
+            ForEach(service.options(for: display), id: \.self) { value in
+                ShortcutRecorderRow(
+                    label: inputLabel(value),
+                    shortcut: Binding(
+                        get: { service.shortcut(for: display, input: value) },
+                        set: { service.setShortcut($0, for: display, input: value) }
+                    ),
+                    leadingInset: 12
+                )
+            }
+            Text("Switches this monitor to that input from anywhere. Set one on each computer.").caption()
         }
     }
 

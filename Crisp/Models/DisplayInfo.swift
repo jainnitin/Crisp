@@ -27,6 +27,10 @@ class DisplayInfo: ObservableObject, Identifiable {
     @Published var volume: Double = 0
     /// True once a DDC read of VCP 0x62 succeeded. Gates the volume slider and key routing.
     @Published var volumeSupported: Bool = false
+    /// The monitor's own contrast (VCP 0x12) 0–100. Meaningful only while contrastSupported.
+    @Published var contrast: Double = 0
+    /// True once a DDC read of VCP 0x12 succeeded. Gates the Monitor Contrast slider.
+    @Published var contrastSupported: Bool = false
     @Published var availableModes: [DisplayMode]
     @Published var currentDisplayMode: DisplayMode?
     @Published var ddcValues: [UInt8: UInt16?] = [:]

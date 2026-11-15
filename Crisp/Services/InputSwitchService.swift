@@ -1,4 +1,4 @@
-import Foundation
+import AppKit
 import CoreGraphics
 import os.log
 
@@ -27,12 +27,26 @@ final class InputSwitchService: ObservableObject {
     private let listedKey = "crisp.InputSourcesListed"
     private let macInputKey = "crisp.InputMacSource"
     private let markedKey = "crisp.InputMarkedByUser"
+    private let shortcutsKey = "crisp.InputShortcuts"
+
+    /// A global shortcut that switches one monitor to one input: a KVM key per computer.
+    struct InputShortcut: Codable, Equatable {
+        let uuid: String
+        let input: UInt16
+        let shortcut: KeyboardShortcut
+    }
+    /// Input shortcuts across all monitors; HotkeyService registers each.
+    @Published private(set) var shortcuts: [InputShortcut]
+    /// A switch from a shortcut is running, so a repeat press waits it out.
+    private var shortcutSwitchRunning = false
 
     private init() {
         let defaults = UserDefaults.standard
         listed = Self.load(defaults.dictionary(forKey: listedKey))
         macInput = (defaults.dictionary(forKey: macInputKey) as? [String: Int] ?? [:]).compactMapValues(UInt16.init(exactly:))
         markedByUser = Set(defaults.stringArray(forKey: markedKey) ?? [])
+        shortcuts = defaults.data(forKey: shortcutsKey)
+            .flatMap { try? JSONDecoder().decode([InputShortcut].self, from: $0) } ?? []
     }
 
     // MARK: - Queries
@@ -157,7 +171,74 @@ final class InputSwitchService: ObservableObject {
         return result
     }
 
+    // MARK: - Shortcuts
+
+    func shortcut(for display: DisplayInfo, input: UInt16) -> KeyboardShortcut? {
+        shortcuts.first { $0.uuid == display.displayUUID && $0.input == input }?.shortcut
+    }
+
+    /// Records (or clears) the shortcut for one input of one monitor. The combo is taken
+    /// off every other holder first, since Carbon refuses a second registration of it.
+    func setShortcut(_ shortcut: KeyboardShortcut?, for display: DisplayInfo, input: UInt16) {
+        let uuid = display.displayUUID
+        SettingsService.shared.assignStaticShortcut(shortcut) { newValue in
+            shortcuts.removeAll { $0.uuid == uuid && $0.input == input }
+            if let newValue {
+                shortcuts.append(InputShortcut(uuid: uuid, input: input, shortcut: newValue))
+            }
+            saveShortcuts()
+        }
+    }
+
+    /// Clears `shortcut` from every input that holds it; another action took the combo.
+    func removeShortcut(matching shortcut: KeyboardShortcut) {
+        let before = shortcuts.count
+        shortcuts.removeAll { $0.shortcut.sameKeys(as: shortcut) }
+        if shortcuts.count != before { saveShortcuts() }
+    }
+
+    /// An input shortcut fired. On a connected monitor it switches like the list does.
+    /// On a monitor this Mac disconnected through a switch, the shortcut for this Mac's
+    /// own input is the way back: Reconnect, which also writes that input. Anything else
+    /// beeps, so a shortcut never fails silently.
+    func switchFromShortcut(uuid: String, input: UInt16) async {
+        guard !shortcutSwitchRunning else { return }
+        shortcutSwitchRunning = true
+        defer { shortcutSwitchRunning = false }
+
+        let toggle = PhysicalDisplayToggleService.shared
+        if let record = toggle.disconnected.first(where: { $0.uuid == uuid }) {
+            guard record.returnInput == input else {
+                Self.log.notice("input shortcut: display \(uuid, privacy: .public) is disconnected, input \(input, privacy: .public) is not its way back, beeping")
+                NSSound.beep()
+                return
+            }
+            let result = await reconnect(uuid: uuid)
+            if case .failure(let error) = result {
+                Self.log.error("input shortcut: reconnect failed: \(error.description, privacy: .public)")
+                NSSound.beep()
+            }
+            return
+        }
+        guard let display = DisplayManagerAccessor.shared.displays.first(where: { $0.displayUUID == uuid }),
+              isAvailable(for: display) else {
+            Self.log.notice("input shortcut: display \(uuid, privacy: .public) not online or no DDC, beeping")
+            NSSound.beep()
+            return
+        }
+        if case .failure(let error) = await switchInput(display, to: input) {
+            Self.log.error("input shortcut: \(error.description, privacy: .public)")
+            NSSound.beep()
+        }
+    }
+
     // MARK: - Private
+
+    private func saveShortcuts() {
+        if let data = try? JSONEncoder().encode(shortcuts) {
+            UserDefaults.standard.set(data, forKey: shortcutsKey)
+        }
+    }
 
     private static func onlineDisplayID(uuid: String) -> CGDirectDisplayID? {
         var count: UInt32 = 0

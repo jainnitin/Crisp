@@ -632,6 +632,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             }) {
                 ProfileBodyBlock(controller: profC)
             })
+            blocks.append(detail("dcontrast", isOpen: detailOpen, live: true) {
+                MonitorContrastBlock(display: display)
+            })
             blocks.append(detail("dimg-head", isOpen: detailOpen, live: true) {
                 ImageHeadBlock(display: display, state: state)
             })
@@ -923,6 +926,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         // and nothing else retries. A success is remembered so this stops firing.
         for display in visibleDisplays() where !display.isBuiltin && !display.volumeSupported {
             VolumeService.shared.refreshVolume(for: display)
+        }
+        // Same for the monitor's own contrast, and a panel open re-adopts a level the
+        // monitor's OSD changed.
+        for display in visibleDisplays() where !display.isBuiltin {
+            ContrastService.shared.refreshContrast(for: display)
         }
 
         PanelOpenGuard.openedAt = Date()

@@ -237,6 +237,22 @@
     "%lld%%" : {
       "shouldTranslate" : false
     },
+    "Add Keyboard Shortcuts" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "添加键盘快捷键"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "加入鍵盤快速鍵"
+          }
+        }
+      }
+    },
     "Another input disconnects this display. Reconnect it here to switch back." : {
       "localizations" : {
         "zh-Hans" : {
@@ -333,6 +349,38 @@
         }
       }
     },
+    "Edit Keyboard Shortcuts" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "编辑键盘快捷键"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "編輯鍵盤快速鍵"
+          }
+        }
+      }
+    },
+    "Hide Keyboard Shortcuts" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "隐藏键盘快捷键"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "隱藏鍵盤快速鍵"
+          }
+        }
+      }
+    },
     "Input" : {
       "localizations" : {
         "zh-Hans" : {
@@ -361,6 +409,38 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "輸入來源 %@"
+          }
+        }
+      }
+    },
+    "Monitor Contrast" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "显示器对比度"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "顯示器對比"
+          }
+        }
+      }
+    },
+    "Monitor contrast" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "显示器对比度"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "顯示器對比"
           }
         }
       }
@@ -441,6 +521,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "將顯示器切換到其他輸入來源（例如 HDMI 1 或 0x11），與在選單中選擇它相同。「重新連接顯示器」會將它切換回這台 Mac。"
+          }
+        }
+      }
+    },
+    "Switches this monitor to that input from anywhere. Set one on each computer." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在任何地方将此显示器切换到该输入源。每台电脑各设置一个。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在任何地方將此顯示器切換到該輸入來源。每台電腦各設定一個。"
           }
         }
       }
