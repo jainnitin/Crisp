@@ -585,6 +585,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             // rendered once at natural height (the 120Hz fix; docs/panel-resize.md).
             // Each detail block paints its shaded band on the clip layer (banded).
             let modeC = DisplayModeController(display: display, displayManager: dm)
+            // Resolution stops on the main panel, under the display's sliders.
+            blocks.append(block("dres-quick-\(uuid)") {
+                ResolutionSliderBlock(controller: modeC, state: state, style: .quick)
+            })
             let profC = DisplayProfileController(display: display)
             let detailOpen = { state.expandedDisplayIDs.contains(id) }
             func detail<V: View>(_ sub: String, isOpen: @escaping () -> Bool,
@@ -601,7 +605,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             blocks.append(detail("dres-body", isOpen: {
                 detailOpen() && state.resolutionOpenIDs.contains(id)
             }) {
-                ResolutionSliderBlock(controller: modeC, state: state)
+                ResolutionSliderBlock(controller: modeC, state: state, style: .cardList)
             })
             blocks.append(detail("dres-all", isOpen: {
                 detailOpen() && state.resolutionOpenIDs.contains(id)
@@ -617,7 +621,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             }) {
                 RefreshListBlock(controller: modeC)
             })
-            blocks += rotationBlocks(display, detailOpen: detailOpen)
             blocks.append(detail("dmode-tail", isOpen: detailOpen) {
                 ModeTailBlock(controller: modeC)
             })
@@ -632,28 +635,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             }) {
                 ProfileBodyBlock(controller: profC)
             })
-            blocks.append(detail("dimg-head", isOpen: detailOpen, live: true) {
-                ImageHeadBlock(display: display, state: state)
-            })
-            blocks.append(detail("dimg-body", isOpen: {
-                detailOpen() && state.imageOpenIDs.contains(id)
-            }) {
-                ImageBodyBlock(display: display, state: state)
-            })
-            blocks.append(detail("dmid", isOpen: detailOpen) {
-                DetailMiddleBlock(display: display)
-            })
-            blocks.append(detail("dinput-head", isOpen: detailOpen, live: true) {
-                InputHeadBlock(display: display, state: state)
-            })
-            blocks.append(detail("dinput-body", isOpen: {
-                detailOpen() && state.inputOpenIDs.contains(id)
-            }) {
-                InputBodyBlock(display: display, state: state)
-            })
-            blocks.append(detail("dtail", isOpen: detailOpen) {
-                DetailTailBlock(display: display)
-            })
+            // Personal trim: the card keeps Resolution, Refresh Rate and Color Profile.
+            // Rotation, Image Adjustment, HDR / Extra Brightness and the Connection rows
+            // (Input, Volume Control, Main Display, Disconnect) are left out; contrast,
+            // volume and input switching sit on the main panel instead.
         }
         blocks.append(block("reconnect") { ReconnectDisplaysSection() })
         let visCount = vis.count

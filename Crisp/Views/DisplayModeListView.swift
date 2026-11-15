@@ -513,18 +513,26 @@ struct ResolutionSliderBlock: View {
     @ObservedObject var controller: DisplayModeController
     private var display: DisplayInfo { controller.display }
     @ObservedObject var state: PanelSectionState
+    /// .quick: the slider alone, on the main panel under the display's sliders.
+    /// .cardList: the card's part when the slider is on the main panel: the
+    /// "Show all resolutions" disclosure only (or the plain list on a display with
+    /// too few stops for a slider).
+    enum Style { case full, quick, cardList }
+    var style: Style = .full
 
     var body: some View {
         let modes = controller.sliderModes
         if modes.count >= 2 {
             VStack(alignment: .leading, spacing: 0) {
-                modeSlider(modes)
-                DisclosureSubRow(
-                    label: "Show all resolutions",
-                    isExpanded: state.openBinding(\.allResolutionsOpenIDs, display.displayID)
-                )
+                if style != .cardList { modeSlider(modes) }
+                if style != .quick {
+                    DisclosureSubRow(
+                        label: "Show all resolutions",
+                        isExpanded: state.openBinding(\.allResolutionsOpenIDs, display.displayID)
+                    )
+                }
             }
-        } else {
+        } else if style != .quick {
             ResolutionListView(controller: controller)
         }
     }
@@ -733,9 +741,8 @@ struct ModeTailBlock: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             // External displays only: built-ins already scale via System Settings.
-            if !display.isBuiltin {
-                smoothScalingSection
-            }
+            // Smooth scaling left out of this panel (personal trim); the stops on the
+            // main panel cover the sizes in use.
 
             NotchView(display: display)
 

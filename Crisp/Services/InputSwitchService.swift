@@ -28,6 +28,10 @@ final class InputSwitchService: ObservableObject {
     private let macInputKey = "crisp.InputMacSource"
     private let markedKey = "crisp.InputMarkedByUser"
     private let shortcutsKey = "crisp.InputShortcuts"
+    private let hiddenKey = "crisp.InputSourcesHidden"
+
+    /// Inputs left out of the main panel's quick row, by display uuid (an unused port).
+    @Published private(set) var hidden: [String: Set<UInt16>]
 
     /// A global shortcut that switches one monitor to one input: a KVM key per computer.
     struct InputShortcut: Codable, Equatable {
@@ -45,6 +49,7 @@ final class InputSwitchService: ObservableObject {
         listed = Self.load(defaults.dictionary(forKey: listedKey))
         macInput = (defaults.dictionary(forKey: macInputKey) as? [String: Int] ?? [:]).compactMapValues(UInt16.init(exactly:))
         markedByUser = Set(defaults.stringArray(forKey: markedKey) ?? [])
+        hidden = Self.load(defaults.dictionary(forKey: hiddenKey)).mapValues(Set.init)
         shortcuts = defaults.data(forKey: shortcutsKey)
             .flatMap { try? JSONDecoder().decode([InputShortcut].self, from: $0) } ?? []
     }
@@ -169,6 +174,20 @@ final class InputSwitchService: ObservableObject {
         let written = await DDCService.shared.writeInputAfterReconnect(displayID: displayID, value: returnInput)
         Self.log.notice("display \(uuid, privacy: .public) reconnected, input \(returnInput, privacy: .public) written: \(written, privacy: .public)")
         return result
+    }
+
+    // MARK: - Quick row
+
+    func isHidden(_ value: UInt16, for display: DisplayInfo) -> Bool {
+        hidden[display.displayUUID]?.contains(value) == true
+    }
+
+    func setHidden(_ isHidden: Bool, value: UInt16, for display: DisplayInfo) {
+        let uuid = display.displayUUID
+        var set = hidden[uuid] ?? []
+        if isHidden { set.insert(value) } else { set.remove(value) }
+        hidden[uuid] = set.isEmpty ? nil : set
+        save(hidden.mapValues { $0.sorted() }, forKey: hiddenKey)
     }
 
     // MARK: - Shortcuts

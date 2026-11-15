@@ -42,7 +42,9 @@ struct ContrastSliderView: View {
 
     var body: some View {
         HStack(spacing: 8) {
+            // Same glyph at both ends, dimmed at the low end, like the brightness pair.
             BrightnessStepButton(systemName: "circle.lefthalf.filled") { step(-contrastStep) }
+                .opacity(0.5)
 
             Slider(value: $localContrast, in: 0...100) { editing in
                 isDragging = editing
@@ -58,7 +60,7 @@ struct ContrastSliderView: View {
                 ContrastService.shared.setContrast(newValue, for: display)
             }
 
-            BrightnessStepButton(systemName: "circle.righthalf.filled") { step(contrastStep) }
+            BrightnessStepButton(systemName: "circle.lefthalf.filled") { step(contrastStep) }
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 4)
